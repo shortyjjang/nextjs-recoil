@@ -1,20 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0&display=swap');
 :root {
   --colorGray: #d2d2d2;
   --defaultRound: 4px;
-  --colorPoint: #4876ef
+  --colorPoint: #4876ef;
+  --colorDeepGray: #898989;
 }
 
-html,
-body, h1,h2,h3,h4,h5,h6,p {
+* {
   padding: 0;
   margin: 0;
+  box-sizing: border-box;
 }
 
 html,
 body {
-  padding: 0;
-  margin: 0;
   background:#fff;
 }
 
@@ -23,21 +23,23 @@ a {
   text-decoration: none;
 }
 
-* {
-  box-sizing: border-box;
-}
 
 body, input, textarea, select, button {
   font-family: 'Noto Sans KR', sans-serif;
   color: #1b1b1b;
   font-size: 13px;
   font-weight: 400;
+  padding:0;
+}
+ul,ol,li {
+  list-style:none;
 }
 input, textarea, select, button {
   appearance:none;
   background:none;
   border:0;
 }
+svg {vertical-align:middle;}
 input, textarea, select {
   box-sizing: border-box;
   border: 1px solid var(--colorGray);
@@ -45,6 +47,10 @@ input, textarea, select {
   -webkit-appearance: none;
   padding: 14px 16px;
 }
+button {cursor:pointer;}
+input[type="checkbox"], input[type="radio"] {margin-top:-3px;width:20px;height:20px;border-radius:100%;background: url('/static/images/ic-check.svg') no-repeat 3px 5px;background-size: 12px;padding:0;border:1px solid #d9d9d9;}
+input[type="checkbox"]:checked, input[type="radio"]:checked {border-color:#4876ef;background-image: url('/static/images/ic-checkon.svg')}
+
 .btn-submit {
   background: var(--colorPoint);
   color: #fff;
@@ -55,6 +61,19 @@ input, textarea, select {
   text-align: center;
   border-radius: 3px;
   display: inline-flex;
+}
+.btn-submit[disabled] {
+  color: var(--colorDeepGray);
+  background: var(--colorGray);
+}
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 11;
+  border-bottom: 1px solid #e6e8ec;
+  background: #fff;
 }
 /* @media (prefers-color-scheme: dark) {
   html {
