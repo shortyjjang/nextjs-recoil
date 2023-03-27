@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CheckBox } from "../components/form/checkbox";
 import Layout from "../components/layout";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Keypad from "../components/form/keypad";
-import axios from 'axios'
+// import axios from 'axios'
 import dayjs from "dayjs";
 import CheckIcon from "../components/icon/check";
+import axios from "axios";
+import { userState } from "../states/user";
+import { useRecoilState } from "recoil";
 
 type StepProps = {
     title: string;
@@ -52,30 +55,30 @@ type TermsProps = {
 type DataProps = {
     email: string;
     password: string;
-    pin: number | null
+    pin: string
 }
 type CertifyProps = {
-    expires: string | null;
     checked: boolean;
     phone: string;
     number: string;
-    sended: boolean;
+    send: boolean;
 }
 
-export default function Signup() {
+export default function Signup():JSX.Element {
+    const [user, setUser] = useRecoilState(userState)
     const router = useRouter()
-    const [step, setStep] = useState<number>(1)
+    const [step, setStep] = useState<number>(4)
+    const [expires, setExpires] = useState<number>(0)
     const [data, setData] = useState<DataProps>({
         password: '',
         email: '',
-        pin: null
+        pin: ''
     })
     const [certify, setCertify] = useState<CertifyProps>({
         number: '',
         checked: false,
-        expires: null,
         phone: '',
-        sended: false
+        send: false
     })
     const [password, setPassword] = useState<string>('')
     const [terms, setTerms] = useState<TermsProps[]>([
@@ -105,6 +108,7 @@ export default function Signup() {
             link: 'privacy'
         }
     ])
+    const [pinCheck, setPinCheck] = useState<string>('')
     const handleTerms = (type:string) => {
         let newTerms: TermsProps[] = []
         if(type === 'all') {
@@ -138,29 +142,32 @@ export default function Signup() {
         }
         setTerms(newTerms)
     }
-    const requestCertify = async () => {
-        if(certify.sended && dayjs().diff(dayjs(certify.expires), 'second') > 0) {
-            const body = {
-                phone: certify.phone,
-                token: certify.number
-            }
-            await axios.post('/휴대폰인증번호확인', body)
-            setCertify({
-                ...certify,
-                checked:true,
-            })
-        }else{
-            const body = {
-                phone: certify.phone
-            }
-            await axios.post('/휴대폰인증요청', body)
-            setCertify({
-                ...certify,
-                sended:true,
-                expires: dayjs().add(3,'minutes').format('YYYY-MM-DD hh:mm:ss'),
-            })
+    const startExpires = () => {
+        const timer = setInterval(() => setExpires(expires - 1),1000)
+        expires < 1 && clearInterval(timer)
+        return () => {
+            clearInterval(timer)
         }
     }
+    const completeJoin = async () => {
+        const body = {
+            email: data.email,
+            password: data.password,
+            pin: data.pin,
+            phone: certify.phone
+        }
+        const request = await axios.post('', body)
+        if(request.data.result === 'ok') {
+            setStep(7)
+            setUser(body)
+        }else{
+            alert('회원가입이 정상적으로 처리되지않았습니다.')
+            setStep(1)
+        }
+    }
+    useEffect(() => {
+        user.email && router.push('/')
+    },[])
     return (
         <Layout type={step === 7 ? 'menu': "back"} title="회원가입" action={() => step ===  1 ? router.back() : setStep(step - 1)}>
             <div className="container signup">
@@ -252,44 +259,109 @@ export default function Signup() {
                     <div className="frm">
                         <p><span className="certification">
                             <input type="text" className="text" value={certify.phone} readOnly placeholder="휴대전화번호" />
-                            <button className="btn-check">본인인증</button>
+                            <button className="btn-check" onClick={() => setExpires(180)}>{certify.send ? '재인증' : '본인인증'}</button>
                         </span></p>
-                        {certify.sended && <p><span className="check-certification"><input type="tel" className="text" placeholder="인증번호" /><small>2:58</small></span></p>}
+                        {certify.send && expires > 0 && 
+                        <p><span className="check-certification"><input type="tel" className="text" placeholder="인증번호" readOnly value={certify.number} /><small>{Math.floor(expires/60)}:
+                        {expires - Math.floor(expires/60) * 60 < 1 
+                            ? 60 : <>
+                            {expires - Math.floor(expires/60) * 60 < 10 && '0'}
+                            {expires - Math.floor(expires/60) * 60}
+                            </>
+                        }</small></span></p>}
                     </div>
+                    {certify.send ?
                     <Keypad 
-                        value={certify.sended ? certify.number : certify.phone} 
-                        setValue={(val:string) => 
-                            setCertify(certify.sended ? {
+                        value={certify.number} 
+                        setValue={(val:string) => setCertify({
+                            ...certify,
+                            number: certify.number+val
+                        })} 
+                        complete={() => {
+                            setExpires(0)
+                            setStep(5)
+                        }} 
+                        rule={(!certify.number || expires < 1) ? true : false}
+                    />: 
+                    <Keypad 
+                        value={certify.phone} 
+                        setValue={(val:string) => certify.phone.length < 11 && setCertify({
+                            ...certify,
+                            phone: val ? certify.phone+val : ''
+                        })} 
+                        complete={() => {
+                            setExpires(180)
+                            setCertify({
                                 ...certify,
-                                number: val
-                            }:{
-                                ...certify,
-                                phone: val
+                                send: true,
                             })
-                        }
-                        complete={requestCertify}
-                        rule={certify.sended ? !certify.number : !certify.phone}
-                    />
+                            startExpires()
+                        }} 
+                        rule={certify.phone.length < 11 ? true: false}
+                    />}
                 </Step>}
                 {step === 5 && <Step title="간편비밀번호를 입력해주세요" step={step}
                     setStep={setStep}
                 >
                     <div className="frm">
                         <p className="dot">
-                            <span className="placeholder">•</span><span className="placeholder">•</span><span className="placeholder">•</span><span className="placeholder">•</span>
-                            <input type="tel" className="text" />
+                            <i className={data.pin.length > 0 ? 'current': ''} />
+                            <i className={data.pin.length > 1 ? 'current': ''} />
+                            <i className={data.pin.length > 2 ? 'current': ''} />
+                            <i className={data.pin.length > 3 ? 'current': ''} />
                         </p>
                     </div>
+                    <Keypad 
+                        value={data.pin} 
+                        setValue={(val:string) =>{
+                            if(data.pin.length > 4) {
+                                setData({
+                                    ...data,
+                                    pin: val ? val :''
+                                })
+                                return;
+                            }
+                            if((data.pin+val).length === 4) {
+                                setStep(6)
+                            }
+                            setData({
+                                ...data,
+                                pin: val ? data.pin+val :''
+                            })
+                        }} 
+                    />
                 </Step>}
                 {step === 6 && <Step title="간편비밀번호를 다시 입력해주세요" step={step}
                     setStep={setStep}
                 >
                     <div className="frm">
                         <p className="dot">
-                            <span className="placeholder">•</span><span className="placeholder">•</span><span className="placeholder">•</span><span className="placeholder">•</span>
-                            <input type="tel" className="text" />
+                            <i className={pinCheck.length > 0 ? 'current': ''} />
+                            <i className={pinCheck.length > 1 ? 'current': ''} />
+                            <i className={pinCheck.length > 2 ? 'current': ''} />
+                            <i className={pinCheck.length > 3 ? 'current': ''} />
                         </p>
                     </div>
+                    <Keypad 
+                        value={pinCheck} 
+                        setValue={(val:string) =>{
+                            if(pinCheck.length > 4) {
+                                setPinCheck(val ? val :'')
+                                return;
+                            }
+                            if((pinCheck+val).length === 4) {
+                                if(data.pin === pinCheck+val) {
+                                    completeJoin()
+                                }
+                                else {
+                                    alert('간편비밀번호가 일치하지 않습니다.')
+                                    setPinCheck('')
+                                    return;
+                                }
+                            }
+                            setPinCheck(val ? pinCheck+val : '')
+                        }} 
+                    />
                 </Step>}
                 {step === 7 && <Step title="가입완료">
                     <p className="success">
@@ -306,6 +378,10 @@ export default function Signup() {
                     font-weight: 500;
                     line-height: 26px;
                 }
+                .dot {display:flex;justify-content:center;padding-top:20px;}
+                .dot i+i {margin-left:30px;}
+                .dot .current {background:#000;}
+                .dot i {display:block;width:15px;height:15px;background:var(--colorGray);border-radius:100%;}
                 .frm .remove {position:absolute;right:10px;top:50%;background:var(--colorGray);border-radius:100%;color:#fff;width:24px;height:24px;display:flex;justify-content:center;align-items:center;margin-top:-25px;}
                 .material-symbols-outlined {font-size:16px;}
                 .frm .check {display:inline-block;line-height:24px;color:#d9d9d9;font-size:12px;}
@@ -322,7 +398,20 @@ export default function Signup() {
                 .signup .policy input {position:absolute;top:50%;left:14px;margin-top:-10px;}
                 .signup .policy dt {position:relative;padding:10px 0 10px 14px;border-bottom:1px solid #d2d2d2;}
                 .signup .policy li:after {content:'';position:absolute;transform: rotate(45deg);opacity: 0.6;top:50%;right:16px;margin-top:-6px;width:7px;height:7px;border:solid #d2d2d2;border-width:1px 1px 0 0;}
-
+                .frm .certification {display:block;position:relative;}
+                .frm .certification .iti {display:block;}
+                .frm .certification+.btn-submit+.check-certification {margin-top:7px;}
+                .frm .certification+.btn-submit {position:absolute;top:10px;right:10px;line-height:30px;font-size:11px;width:auto;padding:0 10px;}
+                .frm .certification .btn-check, .frm .check-certification .btn-check {font-size:12px;line-height:20px;width:53px;text-align:center;position:absolute;top:50%;margin-top:-10px;right:15px;border-radius:2px;}
+                .frm .check-certification {position:relative;display: block;}
+                .frm .certification+.check-certification {margin-top:7px;display:none;}
+                .frm .check-certification small {position:absolute;right:16px;top:50%;margin-top:-10px;color: #4876ef;}
+                .success {
+                    position: relative;
+                    text-align: center;
+                    color: #898989;
+                    padding-top: 40px;
+                }
             `}</style>
         </Layout>
     )

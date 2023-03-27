@@ -1,24 +1,38 @@
 import Link from "next/link"
 import {useState} from 'react'
+import { useRecoilState } from "recoil";
+import { userState } from "../states/user";
 type LoginData = {
     email: string;
     password: string;
 }
 export default function Login() {
+    const [user, setUser] = useRecoilState(userState)
     const [data, setData] = useState<LoginData>({
         email: '',
         password: ''
     })
     const handleLogin = (e: React.SyntheticEvent) => {
         e.preventDefault()
+        setUser({
+            ...user,
+            ...data
+        })
     }
     return (
         <div className="container login">
             <h1 className="ptit">MY WALLET</h1>
             <form onSubmit={handleLogin} className="frm">
-                <p><input type="text" className="text" value={data?.email} placeholder="이메일" onChange={e => setData({...data, email: e.target.value})} /></p>
+                <p><input type="text" className="text" value={data?.email} placeholder="이메일"
+                    onKeyDown={(e) => 
+                        e.key.match(
+                            /[,?><!#$%^&*(|)/+=`~]/
+                        ) && e.preventDefault()
+                    } 
+                    onChange={e => setData({...data, email: e.target.value})} 
+                /></p>
                 <p><input type="password" className="text" value={data?.password} placeholder="비밀번호" onChange={e => setData({...data, password: e.target.value})} /></p>
-                <button className="btn-submit" type="submit">로그인</button>
+                <button className="btn-submit" disabled={!data.password || !data.email || !data.email.includes('@') || !data.email.includes('.')} type="submit">로그인</button>
             </form>
             <div className="other-way">
                 <div className="help">
