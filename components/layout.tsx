@@ -23,24 +23,26 @@ const Navigation = () => {
                 <h1 className="ptit"><Link href="/" style={{display:'flex',alignItems:'center'}}>MY WALLET</Link></h1>
                 <Link href="/"><span className="material-symbols-outlined">person</span></Link>
             </header>
-            {menu && <ul id="naviation">
+            <ul id="naviation">
                 <li><Link href="/" style={{paddingBottom: '10px', display: 'block'}}><span className="material-symbols-outlined">home</span>홈</Link></li>
                 <li><Link href="/inout" style={{paddingBottom: '10px', display: 'block'}}><span className="material-symbols-outlined">sync_alt</span>입출금</Link></li>
                 <li><Link href="/exchange" style={{paddingBottom: '10px', display: 'block'}}><span className="material-symbols-outlined">currency_exchange</span>교환</Link></li>
                 <li><Link href="/staking" style={{paddingBottom: '10px', display: 'block'}}><span className="material-symbols-outlined">database</span>스테이킹</Link></li>
                 <li><Link href="/purchases" style={{paddingBottom: '10px', display: 'block'}}><span className="material-symbols-outlined">article</span>거래내역</Link></li>
-            </ul>}
+            </ul>
             <style jsx>{`
                 header {display:flex;justify-content:space-between;}
                 h1 {color:var(--colorPoint);font-weight:800;font-size:1rem;letter-spacing:0.2rem;display:grid;}
                 .btn-menu {padding:15px 10px;}
-                .btn-menu:before,.btn-menu:after {content:'';display:block;width:17px;height:5px;border:solid #111;border-width:1.5px 0;}
-                .btn-menu:after {border-width:0 0 1.5px;}
+                /*.btn-menu:before,.btn-menu:after {content:'';display:block;width:17px;height:5px;border:solid #111;border-width:1.5px 0;}
+                .btn-menu:after {border-width:0 0 1.5px;}*/
                 .material-symbols-outlined {padding:10px;}
                 #naviation {position:fixed;bottom:0;left:0;width:100%;z-index: 10;box-shadow:0 2px 30px rgba(0,0,0,0.2);background:#fff;display:flex;font-size:9px;}
                 #naviation li {width:100%;text-align:center;}
                 #naviation span {display:block;margin-bottom:-5px;}
-                
+                @media screen and (min-width:720px) {
+
+                }
             `}</style>
         </>
     )
@@ -69,10 +71,13 @@ const HeaderTitle = ({title, type, action}:HeaderProps) => {
 }
 export default function Layout({type, children, title, action}:LayoutProps) {
     return (
-        <div>
+        <>
             {type === 'menu' ? <Navigation />
             : <HeaderTitle title={title} type={type} action={action?action:null} />}
-            {children}
-        </div>
+            <div>{children}</div>
+            <style jsx>{`
+                div {padding:60px 20px 0;}
+            `}</style>
+        </>
     )
 }
