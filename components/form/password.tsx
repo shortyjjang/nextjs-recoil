@@ -27,9 +27,10 @@ export default function Password({password, checkPassword, setCheckPassword, set
             value={checkPassword}
             onChange={(e) => setCheckPassword(e.target.value)}
         /></p>
-        <style>{`
+        <style jsx>{`
             input {width:100%;}
             p {position:relative;}
+            span {display:inline-block;margin-top:4px;}
             p+p {margin-top:15px;}
             .remove {position:absolute;right:10px;top:50%;background:var(--colorGray);border-radius:100%;color:#fff;width:24px;height:24px;display:flex;justify-content:center;align-items:center;margin-top:-25px;}
         `}</style>

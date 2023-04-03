@@ -35,6 +35,7 @@ function Step({title, children, rule, setStep, step}:StepProps) {
                     font-size: 20px;
                     font-weight: 500;
                     line-height: 26px;
+                    padding-bottom:40px;
                 }
                 .btn-area {
                     position:fixed;
@@ -62,7 +63,7 @@ type DataProps = {
 const Signup:NextPage = () => {
     const [user, setUser] = useRecoilState(userState)
     const router = useRouter()
-    const [step, setStep] = useState<number>(4)
+    const [step, setStep] = useState<number>(1)
     const [data, setData] = useState<DataProps>({
         password: '',
         email: '',
@@ -97,6 +98,7 @@ const Signup:NextPage = () => {
             link: 'privacy'
         }
     ])
+    const [authenticate, setAuthenticate] = useState<boolean>(false)
     const [pinCheck, setPinCheck] = useState<string>('')
     const handleTerms = (type:string) => {
         let newTerms: TermsProps[] = []
@@ -211,11 +213,11 @@ const Signup:NextPage = () => {
                         })} 
                         password={data.password} 
                         checkPassword={password} 
-                        style={{marginTop: '40px'}}
                     />
                 </Step>}
                 {step === 4 && <Step title="본인인증을 해주세요" step={step}
                     setStep={setStep}
+                    rule={!authenticate}
                 >
                     <Certify 
                         setPhoneNumber={(value:string) => setData({
@@ -223,7 +225,7 @@ const Signup:NextPage = () => {
                             phone: value
                         })}
                         complete={() => {
-                            setStep(5)
+                            setAuthenticate(true)
                         }}
                     />
                 </Step>}
@@ -243,9 +245,11 @@ const Signup:NextPage = () => {
                 >
                     <Pin value={pinCheck} 
                         complete={() => {
+                            console.log(data.pin, pinCheck)
                             if(data.pin !== pinCheck) {
                                 alert('간편비밀번호가 일치하지 않습니다.')
                                 setPinCheck('')
+                                setStep(5)
                                 return;
                             }
                             completeJoin()
@@ -262,27 +266,16 @@ const Signup:NextPage = () => {
                 </Step>}
             </div>
             <style jsx>{`
-                .stit {
-                    text-align: center;
-                    font-size: 20px;
-                    font-weight: 500;
-                    line-height: 26px;
-                }
-                .dot {display:flex;justify-content:center;padding-top:20px;}
-                .dot i+i {margin-left:30px;}
-                .dot .current {background:#000;}
-                .dot i {display:block;width:15px;height:15px;background:var(--colorGray);border-radius:100%;}
                 .frm .remove {position:absolute;right:10px;top:50%;background:var(--colorGray);border-radius:100%;color:#fff;width:24px;height:24px;display:flex;justify-content:center;align-items:center;margin-top:-25px;}
                 .material-symbols-outlined {font-size:16px;}
                 .frm .check {display:inline-block;line-height:24px;color:#d9d9d9;font-size:12px;}
                 .frm .check.on {color:#1b1b1b;}
                 .frm .check+.check {margin-left:4px;}
-                .signup {padding:90px 30px 30px;}
-                .signup .frm {padding-top:40px;}
+                .signup {padding:30px 10px;}
                 .signup .frm input {width:100%;}
                 .signup .frm p {position:relative;}
                 .signup .frm p+p {margin-top:15px;}
-                .signup .policy {border:1px solid #d2d2d2;border-radius:4px;margin-top:40px}
+                .signup .policy {border:1px solid #d2d2d2;border-radius:4px;}
                 .signup .policy dd {padding:12px 0;}
                 .signup .policy li {position:relative;color:#1b1b1b;display:block;padding:10px 25px 10px 14px;}
                 .signup .policy input {position:absolute;top:50%;left:14px;margin-top:-10px;}
