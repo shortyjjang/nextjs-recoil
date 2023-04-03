@@ -1,3 +1,4 @@
+import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
@@ -22,6 +23,9 @@ export default function Layout({type, children, title, action}:LayoutProps) {
             :<button></button>}
             <h1 className="ptit">{title ? title :<Link href="/" style={{display:'flex',alignItems:'center'}}><span className="logo">MY WALLET</span></Link>}</h1>
             <Link href="/mypage"><span className="material-symbols-outlined mypage">person</span></Link>
+            <Head>
+                <title>{title ? `${title} - MyWallet`:'MyWallet'}</title>
+            </Head>
         </header>
         <div>{children}</div>
         {type === 'menu' && <ul id="naviation">
